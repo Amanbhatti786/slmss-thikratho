@@ -2,29 +2,53 @@ import React, { useState } from 'react';
 import { 
   Users, CalendarCheck, Award, MessageSquare, 
   Send, AlertCircle, Phone, BookOpen, ShieldCheck, 
-  CheckCircle2, Clock, Check, X, RefreshCw
+  CheckCircle2, Clock, Check, X, RefreshCw, Filter
 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'attendance' | 'students' | 'alerts' | 'sef'>('attendance');
-  const [selectedClass, setSelectedClass] = useState('Class 9');
+  const [selectedClass, setSelectedClass] = useState('Class 1');
+  const [selectedSection, setSelectedSection] = useState('A');
   const [attendanceDate, setAttendanceDate] = useState('2026-11-03');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
 
-  // Sample real data structure for Shah Latif Model Secondary School Thikratho
+  // Katchi to Class 10 classes list
+  const classesList = [
+    'Katchi',
+    'Class 1',
+    'Class 2',
+    'Class 3',
+    'Class 4',
+    'Class 5',
+    'Class 6',
+    'Class 7',
+    'Class 8',
+    'Class 9',
+    'Class 10'
+  ];
+
+  const sectionsList = ['A', 'B', 'C', 'D'];
+
+  // Sample student data with Class and Section
   const [students, setStudents] = useState([
-    { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', status: 'present', phone: '03001234567', whatsapp: '923001234567' },
-    { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', status: 'present', phone: '03019876543', whatsapp: '923019876543' },
-    { id: '3', roll: '03', name: 'Dua Fatima', father: 'Ghulam Rasool', status: 'absent', phone: '03033639664', whatsapp: '923033639664' },
-    { id: '4', roll: '04', name: 'Abdul Rehman', father: 'Nazir Ahmed', status: 'present', phone: '03024567891', whatsapp: '923024567891' },
-    { id: '5', roll: '05', name: 'Mehwish', father: 'Ali Nawaz', status: 'leave', phone: '03051239874', whatsapp: '923051239874' },
+    { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 1', section: 'A', status: 'present', whatsapp: '923001234567' },
+    { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', class: 'Class 1', section: 'A', status: 'present', whatsapp: '923019876543' },
+    { id: '3', roll: '03', name: 'Dua Fatima', father: 'Ghulam Rasool', class: 'Class 1', section: 'A', status: 'absent', whatsapp: '923033639664' },
+    { id: '4', roll: '01', name: 'Abdul Rehman', father: 'Nazir Ahmed', class: 'Class 1', section: 'B', status: 'present', whatsapp: '923024567891' },
+    { id: '5', roll: '02', name: 'Mehwish', father: 'Ali Nawaz', class: 'Class 1', section: 'B', status: 'leave', whatsapp: '923051239874' },
+    { id: '6', roll: '01', name: 'Ali Raza', father: 'Shahid Ali', class: 'Katchi', section: 'A', status: 'present', whatsapp: '923009988771' },
+    { id: '7', roll: '01', name: 'Bilal Khan', father: 'Tariq Mehmood', class: 'Class 10', section: 'A', status: 'present', whatsapp: '923014455667' },
   ]);
 
   const [logs, setLogs] = useState([
-    { id: '1', name: 'Dua Fatima', roll: '03', channel: 'WhatsApp Cloud API', phone: '923033639664', status: 'Delivered', time: '08:45 AM' },
-    { id: '2', name: 'Farhan Ali', roll: '07', channel: 'SMS Gateway', phone: '923012345678', status: 'Delivered', time: '08:46 AM' },
+    { id: '1', name: 'Dua Fatima', roll: '03', classSection: 'Class 1-A', channel: 'WhatsApp Cloud API', phone: '923033639664', status: 'Delivered', time: '08:45 AM' },
   ]);
+
+  // Filter students based on selected Class & Section
+  const filteredStudents = students.filter(
+    s => s.class === selectedClass && s.section === selectedSection
+  );
 
   const toggleStatus = (id: string, newStatus: string) => {
     setStudents(students.map(s => s.id === id ? { ...s, status: newStatus } : s));
@@ -32,14 +56,15 @@ export default function App() {
 
   const submitAttendance = () => {
     setIsSubmitting(true);
-    setNotificationStatus('Saving attendance and triggering WhatsApp/SMS alerts...');
+    setNotificationStatus(`Saving attendance for ${selectedClass} (Section ${selectedSection})...`);
     
     setTimeout(() => {
-      const absents = students.filter(s => s.status === 'absent');
+      const absents = filteredStudents.filter(s => s.status === 'absent');
       const newLogs = absents.map((s, idx) => ({
         id: String(Date.now() + idx),
         name: s.name,
         roll: s.roll,
+        classSection: `${s.class}-${s.section}`,
         channel: 'WhatsApp Cloud API',
         phone: s.whatsapp,
         status: 'Delivered',
@@ -52,9 +77,9 @@ export default function App() {
     }, 1200);
   };
 
-  const presentCount = students.filter(s => s.status === 'present').length;
-  const absentCount = students.filter(s => s.status === 'absent').length;
-  const leaveCount = students.filter(s => s.status === 'leave').length;
+  const presentCount = filteredStudents.filter(s => s.status === 'present').length;
+  const absentCount = filteredStudents.filter(s => s.status === 'absent').length;
+  const leaveCount = filteredStudents.filter(s => s.status === 'leave').length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
@@ -146,11 +171,11 @@ export default function App() {
         {/* Tab 1: Attendance */}
         {activeTab === 'attendance' && (
           <div className="flex flex-col gap-6">
-            {/* Quick Stats Bar */}
+            {/* Quick Stats Bar for Selected Class/Section */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <span className="text-xs text-slate-500 font-medium">Total Registered</span>
-                <p className="text-2xl font-bold text-slate-800 mt-1">{students.length}</p>
+                <span className="text-xs text-slate-500 font-medium">Class Strength ({selectedClass} - {selectedSection})</span>
+                <p className="text-2xl font-bold text-slate-800 mt-1">{filteredStudents.length}</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
                 <span className="text-xs text-emerald-600 font-medium">Present Today</span>
@@ -166,24 +191,39 @@ export default function App() {
               </div>
             </div>
 
-            {/* Attendance Form */}
+            {/* Attendance Filter & Form */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
                 <div className="flex flex-wrap items-center gap-3">
+                  {/* Class Selection */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Class</label>
                     <select
                       value={selectedClass}
                       onChange={(e) => setSelectedClass(e.target.value)}
-                      className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 outline-none"
+                      className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
                     >
-                      <option>Class 6</option>
-                      <option>Class 7</option>
-                      <option>Class 8</option>
-                      <option>Class 9</option>
-                      <option>Class 10</option>
+                      {classesList.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
                     </select>
                   </div>
+
+                  {/* Section Selection */}
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Section</label>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => setSelectedSection(e.target.value)}
+                      className="border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-bold text-emerald-800"
+                    >
+                      {sectionsList.map(sec => (
+                        <option key={sec} value={sec}>Section {sec}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date Picker */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
                     <input
@@ -197,8 +237,8 @@ export default function App() {
 
                 <button
                   onClick={submitAttendance}
-                  disabled={isSubmitting}
-                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 self-stretch sm:self-auto justify-center disabled:opacity-50"
+                  disabled={isSubmitting || filteredStudents.length === 0}
+                  className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 self-stretch md:self-auto justify-center disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -222,63 +262,76 @@ export default function App() {
               )}
 
               {/* Attendance Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
-                    <tr>
-                      <th className="py-3 px-3">Roll #</th>
-                      <th className="py-3 px-3">Student Name</th>
-                      <th className="py-3 px-3">Father Name</th>
-                      <th className="py-3 px-3">Parent WhatsApp</th>
-                      <th className="py-3 px-3 text-center">Mark Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {students.map((student) => (
-                      <tr key={student.id} className="hover:bg-slate-50 transition">
-                        <td className="py-3 px-3 font-semibold text-slate-700">{student.roll}</td>
-                        <td className="py-3 px-3 font-medium text-slate-900">{student.name}</td>
-                        <td className="py-3 px-3 text-slate-600">{student.father}</td>
-                        <td className="py-3 px-3 text-slate-500 font-mono text-xs">{student.whatsapp}</td>
-                        <td className="py-3 px-3">
-                          <div className="flex justify-center gap-1.5">
-                            <button
-                              onClick={() => toggleStatus(student.id, 'present')}
-                              className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                                student.status === 'present'
-                                  ? 'bg-emerald-600 text-white shadow-sm'
-                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                              }`}
-                            >
-                              Present
-                            </button>
-                            <button
-                              onClick={() => toggleStatus(student.id, 'absent')}
-                              className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                                student.status === 'absent'
-                                  ? 'bg-rose-600 text-white shadow-sm'
-                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                              }`}
-                            >
-                              Absent
-                            </button>
-                            <button
-                              onClick={() => toggleStatus(student.id, 'leave')}
-                              className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                                student.status === 'leave'
-                                  ? 'bg-amber-500 text-white shadow-sm'
-                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                              }`}
-                            >
-                              Leave
-                            </button>
-                          </div>
-                        </td>
+              {filteredStudents.length === 0 ? (
+                <div className="text-center py-10 text-slate-400">
+                  <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Is class aur section mein abhi koi student registered nahi hai.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
+                      <tr>
+                        <th className="py-3 px-3">Roll #</th>
+                        <th className="py-3 px-3">Student Name</th>
+                        <th className="py-3 px-3">Father Name</th>
+                        <th className="py-3 px-3">Class & Section</th>
+                        <th className="py-3 px-3">Parent WhatsApp</th>
+                        <th className="py-3 px-3 text-center">Mark Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredStudents.map((student) => (
+                        <tr key={student.id} className="hover:bg-slate-50 transition">
+                          <td className="py-3 px-3 font-semibold text-slate-700">{student.roll}</td>
+                          <td className="py-3 px-3 font-medium text-slate-900">{student.name}</td>
+                          <td className="py-3 px-3 text-slate-600">{student.father}</td>
+                          <td className="py-3 px-3">
+                            <span className="bg-slate-100 text-slate-700 font-semibold text-xs px-2 py-0.5 rounded">
+                              {student.class} - {student.section}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-500 font-mono text-xs">{student.whatsapp}</td>
+                          <td className="py-3 px-3">
+                            <div className="flex justify-center gap-1.5">
+                              <button
+                                onClick={() => toggleStatus(student.id, 'present')}
+                                className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                                  student.status === 'present'
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                Present
+                              </button>
+                              <button
+                                onClick={() => toggleStatus(student.id, 'absent')}
+                                className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                                  student.status === 'absent'
+                                    ? 'bg-rose-600 text-white shadow-sm'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                Absent
+                              </button>
+                              <button
+                                onClick={() => toggleStatus(student.id, 'leave')}
+                                className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                                  student.status === 'leave'
+                                    ? 'bg-amber-500 text-white shadow-sm'
+                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                }`}
+                              >
+                                Leave
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -289,7 +342,7 @@ export default function App() {
             <div>
               <h2 className="text-base font-bold text-slate-800">Automated Parent Notification Logs</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Notifications are sent directly via official WhatsApp Business API & SMS Gateway when students are marked Absent.
+                Notifications are sent directly via official WhatsApp Business Cloud API & SMS Gateway when students are marked Absent.
               </p>
             </div>
 
@@ -299,6 +352,7 @@ export default function App() {
                   <tr>
                     <th className="py-3 px-3">Time</th>
                     <th className="py-3 px-3">Student</th>
+                    <th className="py-3 px-3">Class/Section</th>
                     <th className="py-3 px-3">Parent Number</th>
                     <th className="py-3 px-3">Channel</th>
                     <th className="py-3 px-3">Delivery Status</th>
@@ -312,6 +366,7 @@ export default function App() {
                         {log.time}
                       </td>
                       <td className="py-3 px-3 font-medium text-slate-800">{log.name} (Roll #{log.roll})</td>
+                      <td className="py-3 px-3 font-semibold text-xs text-emerald-800">{log.classSection}</td>
                       <td className="py-3 px-3 font-mono text-xs text-slate-600">{log.phone}</td>
                       <td className="py-3 px-3">
                         <span className="text-xs bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-medium text-slate-700">
@@ -335,13 +390,22 @@ export default function App() {
         {/* Tab 3: Student Directory */}
         {activeTab === 'students' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-            <h2 className="text-base font-bold text-slate-800 mb-4">Enrolled Students (Shah Latif Model Secondary School)</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+              <h2 className="text-base font-bold text-slate-800">
+                Enrolled Students ({students.length} Total Enrolled)
+              </h2>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {students.map(s => (
                 <div key={s.id} className="border border-slate-200 p-4 rounded-lg flex items-center justify-between">
                   <div>
-                    <h3 className="font-bold text-slate-800">{s.name}</h3>
-                    <p className="text-xs text-slate-500">Father: {s.father}</p>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-slate-800">{s.name}</h3>
+                      <span className="text-[11px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200">
+                        {s.class} ({s.section})
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">Father: {s.father}</p>
                     <p className="text-xs text-slate-500">Roll No: {s.roll} • WhatsApp: {s.whatsapp}</p>
                   </div>
                   <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded">
