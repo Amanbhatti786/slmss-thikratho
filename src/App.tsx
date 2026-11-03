@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { 
   Users, CalendarCheck, Award, MessageSquare, 
-  Send, AlertCircle, Phone, BookOpen, ShieldCheck, 
-  CheckCircle2, Clock, Check, X, RefreshCw, UserPlus, Save
+  Send, Phone, BookOpen, ShieldCheck, 
+  CheckCircle2, Clock, Check, RefreshCw, UserPlus, Save,
+  Smartphone, Radio
 } from 'lucide-react';
 
 export default function App() {
@@ -14,50 +15,61 @@ export default function App() {
   const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
   const [studentAddedSuccess, setStudentAddedSuccess] = useState(false);
 
-  // Form state for adding new student
+  // Naye bache ka registration state (Only SIM Mobile)
   const [newStudent, setNewStudent] = useState({
     roll: '',
     name: '',
     father: '',
     class: 'Class 1',
     section: 'A',
-    whatsapp: ''
+    mobile: ''
   });
 
   // Katchi to Class 10 list
   const classesList = [
-    'Katchi',
-    'Class 1',
-    'Class 2',
-    'Class 3',
-    'Class 4',
-    'Class 5',
-    'Class 6',
-    'Class 7',
-    'Class 8',
-    'Class 9',
-    'Class 10'
+    'Katchi', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 
+    'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'
   ];
 
   // Sections A to F
   const sectionsList = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  // Students Data List
+  // Students list
   const [students, setStudents] = useState([
-    { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 1', section: 'A', status: 'present', whatsapp: '923001234567' },
-    { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', class: 'Class 1', section: 'A', status: 'present', whatsapp: '923019876543' },
-    { id: '3', roll: '03', name: 'Dua Fatima', father: 'Ghulam Rasool', class: 'Class 1', section: 'A', status: 'absent', whatsapp: '923033639664' },
-    { id: '4', roll: '01', name: 'Abdul Rehman', father: 'Nazir Ahmed', class: 'Class 1', section: 'B', status: 'present', whatsapp: '923024567891' },
-    { id: '5', roll: '02', name: 'Mehwish', father: 'Ali Nawaz', class: 'Class 1', section: 'B', status: 'leave', whatsapp: '923051239874' },
-    { id: '6', roll: '01', name: 'Ali Raza', father: 'Shahid Ali', class: 'Katchi', section: 'A', status: 'present', whatsapp: '923009988771' },
-    { id: '7', roll: '01', name: 'Bilal Khan', father: 'Tariq Mehmood', class: 'Class 10', section: 'C', status: 'present', whatsapp: '923014455667' },
+    { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 1', section: 'A', status: 'present', mobile: '03001234567' },
+    { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', class: 'Class 1', section: 'A', status: 'present', mobile: '03019876543' },
+    { id: '3', roll: '03', name: 'Dua Fatima', father: 'Ghulam Rasool', class: 'Class 1', section: 'A', status: 'absent', mobile: '03033639664' },
+    { id: '4', roll: '04', name: 'Taj Muhammad', father: 'Ali Bux', class: 'Class 1', section: 'A', status: 'absent', mobile: '03003456789' },
+    { id: '5', roll: '01', name: 'Abdul Rehman', father: 'Nazir Ahmed', class: 'Class 1', section: 'B', status: 'present', mobile: '03024567891' },
+    { id: '6', roll: '02', name: 'Mehwish', father: 'Ali Nawaz', class: 'Class 1', section: 'B', status: 'leave', mobile: '03051239874' },
+    { id: '7', roll: '01', name: 'Ali Raza', father: 'Shahid Ali', class: 'Katchi', section: 'A', status: 'present', mobile: '03009988771' },
   ]);
 
   const [logs, setLogs] = useState([
-    { id: '1', name: 'Dua Fatima', roll: '03', classSection: 'Class 1-A', channel: 'WhatsApp Cloud API', phone: '923033639664', status: 'Delivered', time: '08:45 AM' },
+    { 
+      id: '1', 
+      name: 'Taj Muhammad', 
+      roll: '04', 
+      classSection: 'Class 1-A', 
+      channel: 'SIM SMS Gateway', 
+      mobile: '03003456789', 
+      msgText: 'Muhtaram Walid, aapka bacha Taj Muhammad (Roll 04) aaj school se ghair-hazir hai. Shah Latif School Thikratho.',
+      status: 'Delivered', 
+      time: '12:08 AM' 
+    },
+    { 
+      id: '2', 
+      name: 'Dua Fatima', 
+      roll: '03', 
+      classSection: 'Class 1-A', 
+      channel: 'SIM SMS Gateway', 
+      mobile: '03033639664', 
+      msgText: 'Muhtaram Walid, aapka bacha Dua Fatima (Roll 03) aaj school se ghair-hazir hai. Shah Latif School Thikratho.',
+      status: 'Delivered', 
+      time: '08:45 AM' 
+    },
   ]);
 
-  // Filter students based on selected Class & Section
   const filteredStudents = students.filter(
     s => s.class === selectedClass && s.section === selectedSection
   );
@@ -68,8 +80,8 @@ export default function App() {
 
   const handleAddStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newStudent.name || !newStudent.roll || !newStudent.whatsapp) {
-      alert('Roll number, Student Name aur WhatsApp number zaroori hain!');
+    if (!newStudent.name || !newStudent.roll || !newStudent.mobile) {
+      alert('Roll number, Student Name aur SIM Mobile number zaroori hain!');
       return;
     }
 
@@ -81,7 +93,7 @@ export default function App() {
       class: newStudent.class,
       section: newStudent.section,
       status: 'present',
-      whatsapp: newStudent.whatsapp.startsWith('92') ? newStudent.whatsapp : `92${newStudent.whatsapp.replace(/^0+/, '')}`
+      mobile: newStudent.mobile
     };
 
     setStudents([createdStudent, ...students]);
@@ -92,33 +104,38 @@ export default function App() {
       father: '',
       class: newStudent.class,
       section: newStudent.section,
-      whatsapp: ''
+      mobile: ''
     });
 
     setTimeout(() => setStudentAddedSuccess(false), 3000);
   };
 
+  // Only Cellular SIM SMS Alert Dispatcher
   const submitAttendance = () => {
     setIsSubmitting(true);
-    setNotificationStatus(`Saving attendance for ${selectedClass} (Section ${selectedSection})...`);
+    setNotificationStatus(`SIM SMS gateway ke zariye parents ko ghair-hazri alerts bhaij rahe hain...`);
     
     setTimeout(() => {
       const absents = filteredStudents.filter(s => s.status === 'absent');
+
       const newLogs = absents.map((s, idx) => ({
         id: String(Date.now() + idx),
         name: s.name,
         roll: s.roll,
         classSection: `${s.class}-${s.section}`,
-        channel: 'WhatsApp Cloud API',
-        phone: s.whatsapp,
+        channel: 'SIM SMS Gateway',
+        mobile: s.mobile,
+        msgText: `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`,
         status: 'Delivered',
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }));
 
       setLogs(prev => [...newLogs, ...prev]);
       setIsSubmitting(false);
-      setNotificationStatus(`Attendance saved! ${absents.length} Absent alert(s) sent via WhatsApp Cloud API.`);
-    }, 1200);
+      setNotificationStatus(
+        `Attendance save ho gayi! ${absents.length} Absent student(s) ke parents ko SIM SMS bhej diya gaya hai.`
+      );
+    }, 1100);
   };
 
   const presentCount = filteredStudents.filter(s => s.status === 'present').length;
@@ -127,7 +144,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Top Header */}
+      {/* Header */}
       <header className="bg-emerald-800 text-white shadow-md border-b-4 border-amber-400">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -149,14 +166,14 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs bg-emerald-900/60 px-3 py-1.5 rounded-full border border-emerald-600/50 flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Live Portal Active
+              <Radio className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+              SIM SMS Alert Gateway Active
             </span>
           </div>
         </div>
       </header>
 
-      {/* Main Container */}
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 flex flex-col gap-6">
         
         {/* Navigation Tabs */}
@@ -193,8 +210,8 @@ export default function App() {
                 : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
             }`}
           >
-            <MessageSquare className="w-4 h-4" />
-            WhatsApp & SMS Alerts
+            <Smartphone className="w-4 h-4" />
+            SIM SMS Alerts Log
             {absentCount > 0 && (
               <span className="bg-red-500 text-white text-[11px] px-1.5 py-0.2 rounded-full font-bold">
                 {absentCount}
@@ -227,113 +244,62 @@ export default function App() {
           </button>
         </div>
 
-        {/* Tab: Add Student Data */}
-        {activeTab === 'add_student' && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto w-full">
-            <div className="border-b border-slate-100 pb-4 mb-4">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-emerald-700" />
-                Add New Student (Class Teacher Portal)
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Teacher apni class aur section ke bachy ka data yahan register karein taaki attendance aur WhatsApp alerts activate ho sakein.
-              </p>
+        {/* Tab: SIM SMS Alerts Logs */}
+        {activeTab === 'alerts' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+              <div>
+                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-emerald-700" />
+                  Parent Attendance SIM SMS Dispatch Logs
+                </h2>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Har ghair-hazir bache ke walid ko direct Cellular SIM ke zariye official SMS receive hota hai.
+                </p>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg text-xs font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                SIM Network Gateway Connected
+              </div>
             </div>
 
-            {studentAddedSuccess && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <span>Student kamyabi se add ho gaya hai! Directory aur Attendance list mein shamil kar diya gaya hai.</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAddStudent} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Class</label>
-                  <select
-                    value={newStudent.class}
-                    onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-medium"
-                  >
-                    {classesList.map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Section (A to F)</label>
-                  <select
-                    value={newStudent.section}
-                    onChange={(e) => setNewStudent({ ...newStudent, section: e.target.value })}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-bold text-emerald-800"
-                  >
-                    {sectionsList.map(sec => (
-                      <option key={sec} value={sec}>Section {sec}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Roll Number</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 01, 15, 23"
-                    value={newStudent.roll}
-                    onChange={(e) => setNewStudent({ ...newStudent, roll: e.target.value })}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Parent Mobile / WhatsApp</label>
-                  <input
-                    type="tel"
-                    placeholder="e.g. 03033639664"
-                    value={newStudent.whatsapp}
-                    onChange={(e) => setNewStudent({ ...newStudent, whatsapp: e.target.value })}
-                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Full Name</label>
-                <input
-                  type="text"
-                  placeholder="Student ka pura naam"
-                  value={newStudent.name}
-                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Father Name</label>
-                <input
-                  type="text"
-                  placeholder="Walid ka naam"
-                  value={newStudent.father}
-                  onChange={(e) => setNewStudent({ ...newStudent, father: e.target.value })}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                  required
-                />
-              </div>
-
-              <button
-                type="submit"
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2 mt-4"
-              >
-                <Save className="w-4 h-4" />
-                Register Student
-              </button>
-            </form>
+            <div className="overflow-x-auto mt-2">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
+                  <tr>
+                    <th className="py-3 px-3">Time</th>
+                    <th className="py-3 px-3">Student Name</th>
+                    <th className="py-3 px-3">Class & Section</th>
+                    <th className="py-3 px-3">Parent SIM #</th>
+                    <th className="py-3 px-3">SMS Text Delivered</th>
+                    <th className="py-3 px-3">Delivery Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {logs.map((log) => (
+                    <tr key={log.id} className="hover:bg-slate-50">
+                      <td className="py-3 px-3 text-xs text-slate-500 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5" />
+                        {log.time}
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-800">{log.name} (Roll #{log.roll})</td>
+                      <td className="py-3 px-3 font-semibold text-xs text-emerald-800">{log.classSection}</td>
+                      <td className="py-3 px-3 font-mono text-xs text-slate-700 font-semibold">{log.mobile}</td>
+                      <td className="py-3 px-3 text-xs text-slate-600 max-w-xs truncate">
+                        {log.msgText}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+                          <Check className="w-3 h-3" />
+                          {log.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -407,12 +373,12 @@ export default function App() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      Submitting...
+                      Sending SIM SMS...
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Submit & Auto-Send Alerts
+                      Submit & Auto-Send SIM SMS
                     </>
                   )}
                 </button>
@@ -444,8 +410,7 @@ export default function App() {
                         <th className="py-3 px-3">Roll #</th>
                         <th className="py-3 px-3">Student Name</th>
                         <th className="py-3 px-3">Father Name</th>
-                        <th className="py-3 px-3">Class & Section</th>
-                        <th className="py-3 px-3">Parent WhatsApp</th>
+                        <th className="py-3 px-3">Parent SIM Mobile #</th>
                         <th className="py-3 px-3 text-center">Mark Status</th>
                       </tr>
                     </thead>
@@ -455,12 +420,7 @@ export default function App() {
                           <td className="py-3 px-3 font-semibold text-slate-700">{student.roll}</td>
                           <td className="py-3 px-3 font-medium text-slate-900">{student.name}</td>
                           <td className="py-3 px-3 text-slate-600">{student.father}</td>
-                          <td className="py-3 px-3">
-                            <span className="bg-slate-100 text-slate-700 font-semibold text-xs px-2 py-0.5 rounded">
-                              {student.class} - {student.section}
-                            </span>
-                          </td>
-                          <td className="py-3 px-3 text-slate-500 font-mono text-xs">{student.whatsapp}</td>
+                          <td className="py-3 px-3 text-slate-700 font-mono text-xs font-semibold">{student.mobile}</td>
                           <td className="py-3 px-3">
                             <div className="flex justify-center gap-1.5">
                               <button
@@ -505,54 +465,113 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab: WhatsApp & SMS Logs */}
-        {activeTab === 'alerts' && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-800">Automated Parent Notification Logs</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Notifications are sent directly via official WhatsApp Business Cloud API & SMS Gateway when students are marked Absent.
+        {/* Tab: Add Student Data */}
+        {activeTab === 'add_student' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto w-full">
+            <div className="border-b border-slate-100 pb-4 mb-4">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-emerald-700" />
+                Add New Student (Class Teacher Portal)
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Teacher apni class aur section ke bache ka data aur walid ka SIM mobile number enter karein.
               </p>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
-                  <tr>
-                    <th className="py-3 px-3">Time</th>
-                    <th className="py-3 px-3">Student</th>
-                    <th className="py-3 px-3">Class/Section</th>
-                    <th className="py-3 px-3">Parent Number</th>
-                    <th className="py-3 px-3">Channel</th>
-                    <th className="py-3 px-3">Delivery Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-slate-50">
-                      <td className="py-3 px-3 text-xs text-slate-500 flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5" />
-                        {log.time}
-                      </td>
-                      <td className="py-3 px-3 font-medium text-slate-800">{log.name} (Roll #{log.roll})</td>
-                      <td className="py-3 px-3 font-semibold text-xs text-emerald-800">{log.classSection}</td>
-                      <td className="py-3 px-3 font-mono text-xs text-slate-600">{log.phone}</td>
-                      <td className="py-3 px-3">
-                        <span className="text-xs bg-slate-100 border border-slate-200 px-2 py-0.5 rounded font-medium text-slate-700">
-                          {log.channel}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3">
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                          <Check className="w-3 h-3" />
-                          {log.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {studentAddedSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span>Student kamyabi se add ho gaya hai!</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddStudent} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Class</label>
+                  <select
+                    value={newStudent.class}
+                    onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-medium"
+                  >
+                    {classesList.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Section (A to F)</label>
+                  <select
+                    value={newStudent.section}
+                    onChange={(e) => setNewStudent({ ...newStudent, section: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-bold text-emerald-800"
+                  >
+                    {sectionsList.map(sec => (
+                      <option key={sec} value={sec}>Section {sec}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Roll Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 01, 15, 23"
+                    value={newStudent.roll}
+                    onChange={(e) => setNewStudent({ ...newStudent, roll: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Parent SIM Mobile Number</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 03033639664"
+                    value={newStudent.mobile}
+                    onChange={(e) => setNewStudent({ ...newStudent, mobile: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Student ka pura naam"
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Father Name</label>
+                <input
+                  type="text"
+                  placeholder="Walid ka naam"
+                  value={newStudent.father}
+                  onChange={(e) => setNewStudent({ ...newStudent, father: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2 mt-4"
+              >
+                <Save className="w-4 h-4" />
+                Register Student
+              </button>
+            </form>
           </div>
         )}
 
@@ -564,7 +583,7 @@ export default function App() {
                 <h2 className="text-base font-bold text-slate-800">
                   Enrolled Students Directory ({students.length} Total Enrolled)
                 </h2>
-                <p className="text-xs text-slate-500">Tamam registered students ka record.</p>
+                <p className="text-xs text-slate-500">Tamam registered students aur parents ke mobile contact records.</p>
               </div>
               <button
                 onClick={() => setActiveTab('add_student')}
@@ -585,7 +604,7 @@ export default function App() {
                       </span>
                     </div>
                     <p className="text-xs text-slate-500 mt-1">Father: {s.father}</p>
-                    <p className="text-xs text-slate-500">Roll No: {s.roll} • WhatsApp: {s.whatsapp}</p>
+                    <p className="text-xs text-slate-500">Roll No: {s.roll} • SIM Mobile: {s.mobile}</p>
                   </div>
                   <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded">
                     Active Student
