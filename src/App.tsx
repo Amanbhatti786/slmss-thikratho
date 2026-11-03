@@ -179,17 +179,7 @@ export default function App() {
     window.location.href = `sms:${cleanMobile}?body=${encodeURIComponent(message)}`;
   };
 
-  const submitAttendance = () => {
-    setIsSubmitting(true);
-    const absents = filteredStudents.filter(s => s.status === 'absent');
-
-    if (absents.length === 0) {
-      setNotificationStatus(`Attendance save ho gayi! Koi bacha absent nahi hai.`);
-      setIsSubmitting(false);
-      return;
-    }
-
-      // Automated SIM SMS Dispatch via Vercel Backend Proxy
+  // Automated SIM SMS Dispatch via Vercel Backend Proxy
   const submitAttendance = async () => {
     setIsSubmitting(true);
     const absents = filteredStudents.filter(s => s.status === 'absent');
@@ -701,4 +691,4 @@ export default function App() {
       </footer>
     </div>
   );
-}
+        }
