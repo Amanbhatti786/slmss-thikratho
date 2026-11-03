@@ -28,7 +28,7 @@ export default function App() {
     'Class 10'
   ];
 
-  const sectionsList = ['A', 'B', 'C', 'D'];
+  const sectionsList = ['A', 'B', 'C', 'D' 'E' 'F'];
 
   // Sample student data with Class and Section
   const [students, setStudents] = useState([
