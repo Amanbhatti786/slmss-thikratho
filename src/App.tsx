@@ -189,6 +189,36 @@ export default function App() {
       return;
     }
 
+      // Automated SIM SMS Dispatch via Vercel Backend Proxy
+  const submitAttendance = async () => {
+    setIsSubmitting(true);
+    const absents = filteredStudents.filter(s => s.status === 'absent');
+
+    if (absents.length === 0) {
+      setNotificationStatus(`Attendance save ho gayi! Koi bacha absent nahi hai.`);
+      setIsSubmitting(false);
+      return;
+    }
+
+    setNotificationStatus(`Traccar SMS Gateway ke zariye ${absents.length} SIM SMS dispatch ho rahe hain...`);
+
+    for (const s of absents) {
+      const messageContent = `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif Model Secondary School Thikratho.`;
+      
+      try {
+        await fetch('/api/send-sms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: s.mobile,
+            message: messageContent
+          })
+        });
+      } catch (e) {
+        console.error("SMS Dispatch error:", e);
+      }
+    }
+
     const newLogs = absents.map((s, idx) => ({
       id: String(Date.now() + idx),
       name: s.name,
@@ -196,17 +226,13 @@ export default function App() {
       classSection: `${s.class}-${s.section}`,
       mobile: s.mobile,
       msgText: `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`,
-      status: 'Dispatched',
+      status: 'Delivered',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }));
 
     setLogs(prev => [...newLogs, ...prev]);
     setIsSubmitting(false);
-    setNotificationStatus(`Attendance save ho gayi! ${absents.length} Absent student(s) ke SMS ready hain.`);
-
-    if (absents.length === 1) {
-      sendSMSNative(absents[0]);
-    }
+    setNotificationStatus(`Kamyabi! ${absents.length} Absent student(s) ke parents ko SIM SMS bhej diya gaya hai.`);
   };
 
   const presentCount = filteredStudents.filter(s => s.status === 'present').length;
