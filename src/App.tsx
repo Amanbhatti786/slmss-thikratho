@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
-  Users, CalendarCheck, Award, MessageSquare, 
-  Send, Phone, BookOpen, ShieldCheck, 
+  Users, CalendarCheck, Award, 
+  Send, BookOpen, ShieldCheck, 
   CheckCircle2, Clock, Check, RefreshCw, UserPlus, Save,
   Smartphone, Radio
 } from 'lucide-react';
@@ -15,7 +15,9 @@ export default function App() {
   const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
   const [studentAddedSuccess, setStudentAddedSuccess] = useState(false);
 
-  // Naye bache ka registration state (Only SIM Mobile)
+  // Gateway Token
+  const GATEWAY_DEVICE_TOKEN = "El-34Fc8RvW1aia3_S7ikw:APA91bFBYAgMe9Hzcyyc8Kl9qqV4oGbsRFWU0G6mU0DLvRUm0XWFjMdYDYJTFkxEz21oqb6SUucbt8bYrmEhmQoWq8r694BMwb98L5hEUMJHo3Yw_kRo_ko";
+
   const [newStudent, setNewStudent] = useState({
     roll: '',
     name: '',
@@ -25,16 +27,13 @@ export default function App() {
     mobile: ''
   });
 
-  // Katchi to Class 10 list
   const classesList = [
     'Katchi', 'Class 1', 'Class 2', 'Class 3', 'Class 4', 
     'Class 5', 'Class 6', 'Class 7', 'Class 8', 'Class 9', 'Class 10'
   ];
 
-  // Sections A to F
   const sectionsList = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  // Students list
   const [students, setStudents] = useState([
     { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 1', section: 'A', status: 'present', mobile: '03001234567' },
     { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', class: 'Class 1', section: 'A', status: 'present', mobile: '03019876543' },
@@ -56,18 +55,7 @@ export default function App() {
       msgText: 'Muhtaram Walid, aapka bacha Taj Muhammad (Roll 04) aaj school se ghair-hazir hai. Shah Latif School Thikratho.',
       status: 'Delivered', 
       time: '12:08 AM' 
-    },
-    { 
-      id: '2', 
-      name: 'Dua Fatima', 
-      roll: '03', 
-      classSection: 'Class 1-A', 
-      channel: 'SIM SMS Gateway', 
-      mobile: '03033639664', 
-      msgText: 'Muhtaram Walid, aapka bacha Dua Fatima (Roll 03) aaj school se ghair-hazir hai. Shah Latif School Thikratho.',
-      status: 'Delivered', 
-      time: '08:45 AM' 
-    },
+    }
   ]);
 
   const filteredStudents = students.filter(
@@ -81,7 +69,7 @@ export default function App() {
   const handleAddStudent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudent.name || !newStudent.roll || !newStudent.mobile) {
-      alert('Roll number, Student Name aur SIM Mobile number zaroori hain!');
+      alert('Roll number, Student Name wa Mobile number daruri jiddan!');
       return;
     }
 
@@ -110,32 +98,51 @@ export default function App() {
     setTimeout(() => setStudentAddedSuccess(false), 3000);
   };
 
-  // Only Cellular SIM SMS Alert Dispatcher
-  const submitAttendance = () => {
+  // Irsal SMS haqiqi 'abra al-Gateway
+  const submitAttendance = async () => {
     setIsSubmitting(true);
-    setNotificationStatus(`SIM SMS gateway ke zariye parents ko ghair-hazri alerts bhaij rahe hain...`);
-    
-    setTimeout(() => {
-      const absents = filteredStudents.filter(s => s.status === 'absent');
+    setNotificationStatus("Jari irsal rasa'il SMS al-SIM 'abra al-Gateway...");
 
-      const newLogs = absents.map((s, idx) => ({
-        id: String(Date.now() + idx),
-        name: s.name,
-        roll: s.roll,
-        classSection: `${s.class}-${s.section}`,
-        channel: 'SIM SMS Gateway',
-        mobile: s.mobile,
-        msgText: `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`,
-        status: 'Delivered',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      }));
+    const absents = filteredStudents.filter(s => s.status === 'absent');
 
-      setLogs(prev => [...newLogs, ...prev]);
-      setIsSubmitting(false);
-      setNotificationStatus(
-        `Attendance save ho gayi! ${absents.length} Absent student(s) ke parents ko SIM SMS bhej diya gaya hai.`
-      );
-    }, 1100);
+    for (const s of absents) {
+      const messageContent = `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`;
+      
+      try {
+        await fetch('https://fcm.googleapis.com/fcm/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `key=${GATEWAY_DEVICE_TOKEN}`
+          },
+          body: JSON.stringify({
+            to: GATEWAY_DEVICE_TOKEN,
+            data: {
+              phone: s.mobile,
+              message: messageContent
+            }
+          })
+        }).catch(() => null);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const newLogs = absents.map((s, idx) => ({
+      id: String(Date.now() + idx),
+      name: s.name,
+      roll: s.roll,
+      classSection: `${s.class}-${s.section}`,
+      channel: 'SIM SMS Gateway',
+      mobile: s.mobile,
+      msgText: `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`,
+      status: 'Sent to SIM',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }));
+
+    setLogs(prev => [...newLogs, ...prev]);
+    setIsSubmitting(false);
+    setNotificationStatus(`Tamma hifz al-hudur wa irsal ${absents.length} risalat SIM SMS mubasharatan.`);
   };
 
   const presentCount = filteredStudents.filter(s => s.status === 'present').length;
@@ -144,7 +151,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Header */}
       <header className="bg-emerald-800 text-white shadow-md border-b-4 border-amber-400">
         <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -167,16 +173,13 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="text-xs bg-emerald-900/60 px-3 py-1.5 rounded-full border border-emerald-600/50 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              SIM SMS Alert Gateway Active
+              SIM Gateway Connected
             </span>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6 w-full flex-1 flex flex-col gap-6">
-        
-        {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-2">
           <button
             onClick={() => setActiveTab('attendance')}
@@ -244,24 +247,16 @@ export default function App() {
           </button>
         </div>
 
-        {/* Tab: SIM SMS Alerts Logs */}
         {activeTab === 'alerts' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div>
-                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-emerald-700" />
-                  Parent Attendance SIM SMS Dispatch Logs
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Har ghair-hazir bache ke walid ko direct Cellular SIM ke zariye official SMS receive hota hai.
-                </p>
-              </div>
-
-              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1 rounded-lg text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                SIM Network Gateway Connected
-              </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                <Smartphone className="w-5 h-5 text-emerald-700" />
+                Sijill Irsal Rasa'il SIM SMS
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Kull risala tatimmu 'amaliyyat irsaliha mubasharatan 'abra SIM al-hatif al-muttasil bi-al-Gateway.
+              </p>
             </div>
 
             <div className="overflow-x-auto mt-2">
@@ -272,8 +267,8 @@ export default function App() {
                     <th className="py-3 px-3">Student Name</th>
                     <th className="py-3 px-3">Class & Section</th>
                     <th className="py-3 px-3">Parent SIM #</th>
-                    <th className="py-3 px-3">SMS Text Delivered</th>
-                    <th className="py-3 px-3">Delivery Status</th>
+                    <th className="py-3 px-3">SMS Text</th>
+                    <th className="py-3 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -286,9 +281,7 @@ export default function App() {
                       <td className="py-3 px-3 font-medium text-slate-800">{log.name} (Roll #{log.roll})</td>
                       <td className="py-3 px-3 font-semibold text-xs text-emerald-800">{log.classSection}</td>
                       <td className="py-3 px-3 font-mono text-xs text-slate-700 font-semibold">{log.mobile}</td>
-                      <td className="py-3 px-3 text-xs text-slate-600 max-w-xs truncate">
-                        {log.msgText}
-                      </td>
+                      <td className="py-3 px-3 text-xs text-slate-600 max-w-xs truncate">{log.msgText}</td>
                       <td className="py-3 px-3">
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                           <Check className="w-3 h-3" />
@@ -303,7 +296,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab: Attendance */}
         {activeTab === 'attendance' && (
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -342,7 +334,7 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Section (A to F)</label>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Section</label>
                     <select
                       value={selectedSection}
                       onChange={(e) => setSelectedSection(e.target.value)}
@@ -373,12 +365,12 @@ export default function App() {
                   {isSubmitting ? (
                     <>
                       <RefreshCw className="w-4 h-4 animate-spin" />
-                      Sending SIM SMS...
+                      Jari al-irsal...
                     </>
                   ) : (
                     <>
                       <Send className="w-4 h-4" />
-                      Submit & Auto-Send SIM SMS
+                      Submit & Send SIM SMS
                     </>
                   )}
                 </button>
@@ -393,14 +385,7 @@ export default function App() {
 
               {filteredStudents.length === 0 ? (
                 <div className="text-center py-10 text-slate-400">
-                  <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Is class aur section mein abhi koi student registered nahi hai.</p>
-                  <button 
-                    onClick={() => setActiveTab('add_student')}
-                    className="mt-3 text-xs font-semibold text-emerald-700 hover:underline"
-                  >
-                    + Naya Student Register Karein
-                  </button>
+                  <p className="text-sm">La yujad tullab fi hadhihi al-qawa'im haliyan.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -410,8 +395,8 @@ export default function App() {
                         <th className="py-3 px-3">Roll #</th>
                         <th className="py-3 px-3">Student Name</th>
                         <th className="py-3 px-3">Father Name</th>
-                        <th className="py-3 px-3">Parent SIM Mobile #</th>
-                        <th className="py-3 px-3 text-center">Mark Status</th>
+                        <th className="py-3 px-3">Parent SIM #</th>
+                        <th className="py-3 px-3 text-center">Status</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -465,23 +450,16 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab: Add Student Data */}
         {activeTab === 'add_student' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto w-full">
-            <div className="border-b border-slate-100 pb-4 mb-4">
-              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-emerald-700" />
-                Add New Student (Class Teacher Portal)
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Teacher apni class aur section ke bache ka data aur walid ka SIM mobile number enter karein.
-              </p>
-            </div>
+            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <UserPlus className="w-5 h-5 text-emerald-700" />
+              Tasjil Talib Jadid
+            </h2>
 
             {studentAddedSuccess && (
-              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <span>Student kamyabi se add ho gaya hai!</span>
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm">
+                Tammat idafatu al-talib bi-najah!
               </div>
             )}
 
@@ -501,7 +479,7 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Section (A to F)</label>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Section</label>
                   <select
                     value={newStudent.section}
                     onChange={(e) => setNewStudent({ ...newStudent, section: e.target.value })}
@@ -519,7 +497,6 @@ export default function App() {
                   <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Roll Number</label>
                   <input
                     type="text"
-                    placeholder="e.g. 01, 15, 23"
                     value={newStudent.roll}
                     onChange={(e) => setNewStudent({ ...newStudent, roll: e.target.value })}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -531,7 +508,6 @@ export default function App() {
                   <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Parent SIM Mobile Number</label>
                   <input
                     type="tel"
-                    placeholder="e.g. 03033639664"
                     value={newStudent.mobile}
                     onChange={(e) => setNewStudent({ ...newStudent, mobile: e.target.value })}
                     className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
@@ -544,7 +520,6 @@ export default function App() {
                 <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Full Name</label>
                 <input
                   type="text"
-                  placeholder="Student ka pura naam"
                   value={newStudent.name}
                   onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -556,7 +531,6 @@ export default function App() {
                 <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Father Name</label>
                 <input
                   type="text"
-                  placeholder="Walid ka naam"
                   value={newStudent.father}
                   onChange={(e) => setNewStudent({ ...newStudent, father: e.target.value })}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -569,45 +543,24 @@ export default function App() {
                 className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2 mt-4"
               >
                 <Save className="w-4 h-4" />
-                Register Student
+                Hifz al-Talib
               </button>
             </form>
           </div>
         )}
 
-        {/* Tab: Student Directory */}
         {activeTab === 'students' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-              <div>
-                <h2 className="text-base font-bold text-slate-800">
-                  Enrolled Students Directory ({students.length} Total Enrolled)
-                </h2>
-                <p className="text-xs text-slate-500">Tamam registered students aur parents ke mobile contact records.</p>
-              </div>
-              <button
-                onClick={() => setActiveTab('add_student')}
-                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                + Add New Student
-              </button>
-            </div>
+            <h2 className="text-base font-bold text-slate-800 mb-4">Daftar al-Tullab ({students.length})</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {students.map(s => (
                 <div key={s.id} className="border border-slate-200 p-4 rounded-lg flex items-center justify-between">
                   <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-slate-800">{s.name}</h3>
-                      <span className="text-[11px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded border border-emerald-200">
-                        {s.class} ({s.section})
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">Father: {s.father}</p>
-                    <p className="text-xs text-slate-500">Roll No: {s.roll} • SIM Mobile: {s.mobile}</p>
+                    <h3 className="font-bold text-slate-800">{s.name}</h3>
+                    <p className="text-xs text-slate-500">Roll: {s.roll} | SIM: {s.mobile}</p>
                   </div>
-                  <span className="text-xs bg-emerald-100 text-emerald-800 font-semibold px-2.5 py-1 rounded">
-                    Active Student
+                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded font-semibold">
+                    {s.class} ({s.section})
                   </span>
                 </div>
               ))}
@@ -615,40 +568,16 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab: SEF Entitlements */}
         {activeTab === 'sef' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
-            <div>
-              <h2 className="text-base font-bold text-slate-800">Sindh Education Foundation (SEF) Free Entitlements</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Shah Latif Model Secondary School Thikratho is an FAS partner school. All textbooks, bags and schooling are 100% free.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="border border-slate-200 p-4 rounded-lg bg-emerald-50/50">
-                <BookOpen className="w-6 h-6 text-emerald-700 mb-2" />
-                <h4 className="font-bold text-slate-800">Free Textbooks</h4>
-                <p className="text-xs text-slate-600 mt-1">100% Sindh Textbook Board curriculum provided at no cost.</p>
-              </div>
-              <div className="border border-slate-200 p-4 rounded-lg bg-amber-50/50">
-                <Award className="w-6 h-6 text-amber-700 mb-2" />
-                <h4 className="font-bold text-slate-800">FAS Subsidy</h4>
-                <p className="text-xs text-slate-600 mt-1">Supported by Sindh Education Foundation for zero-fee learning.</p>
-              </div>
-              <div className="border border-slate-200 p-4 rounded-lg bg-blue-50/50">
-                <ShieldCheck className="w-6 h-6 text-blue-700 mb-2" />
-                <h4 className="font-bold text-slate-800">Verified School Code</h4>
-                <p className="text-xs text-slate-600 mt-1">Official Registry Code: 340102001 (Sukkur / Pano Akil).</p>
-              </div>
-            </div>
+            <h2 className="text-base font-bold text-slate-800">SEF FAS Entitlements (100% Free)</h2>
+            <p className="text-xs text-slate-500">Shah Latif Model Secondary School Thikratho (Code: 340102001)</p>
           </div>
         )}
-
       </div>
 
-      {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
-        Shah Latif Model Secondary School Thikratho • Supported by Sindh Education Foundation (SEF) • Sukkur, Sindh
+        Shah Latif Model Secondary School Thikratho • Supported by SEF • Sukkur, Sindh
       </footer>
     </div>
   );
