@@ -2,18 +2,29 @@ import React, { useState } from 'react';
 import { 
   Users, CalendarCheck, Award, MessageSquare, 
   Send, AlertCircle, Phone, BookOpen, ShieldCheck, 
-  CheckCircle2, Clock, Check, X, RefreshCw, Filter
+  CheckCircle2, Clock, Check, X, RefreshCw, UserPlus, Save
 } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'attendance' | 'students' | 'alerts' | 'sef'>('attendance');
+  const [activeTab, setActiveTab] = useState<'attendance' | 'students' | 'add_student' | 'alerts' | 'sef'>('attendance');
   const [selectedClass, setSelectedClass] = useState('Class 1');
   const [selectedSection, setSelectedSection] = useState('A');
   const [attendanceDate, setAttendanceDate] = useState('2026-11-03');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
+  const [studentAddedSuccess, setStudentAddedSuccess] = useState(false);
 
-  // Katchi to Class 10 classes list
+  // Form state for adding new student
+  const [newStudent, setNewStudent] = useState({
+    roll: '',
+    name: '',
+    father: '',
+    class: 'Class 1',
+    section: 'A',
+    whatsapp: ''
+  });
+
+  // Katchi to Class 10 list
   const classesList = [
     'Katchi',
     'Class 1',
@@ -28,9 +39,10 @@ export default function App() {
     'Class 10'
   ];
 
-  const sectionsList = ['A', 'B', 'C', 'D' 'E' 'F'];
+  // Sections A to F
+  const sectionsList = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  // Sample student data with Class and Section
+  // Students Data List
   const [students, setStudents] = useState([
     { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 1', section: 'A', status: 'present', whatsapp: '923001234567' },
     { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', class: 'Class 1', section: 'A', status: 'present', whatsapp: '923019876543' },
@@ -38,7 +50,7 @@ export default function App() {
     { id: '4', roll: '01', name: 'Abdul Rehman', father: 'Nazir Ahmed', class: 'Class 1', section: 'B', status: 'present', whatsapp: '923024567891' },
     { id: '5', roll: '02', name: 'Mehwish', father: 'Ali Nawaz', class: 'Class 1', section: 'B', status: 'leave', whatsapp: '923051239874' },
     { id: '6', roll: '01', name: 'Ali Raza', father: 'Shahid Ali', class: 'Katchi', section: 'A', status: 'present', whatsapp: '923009988771' },
-    { id: '7', roll: '01', name: 'Bilal Khan', father: 'Tariq Mehmood', class: 'Class 10', section: 'A', status: 'present', whatsapp: '923014455667' },
+    { id: '7', roll: '01', name: 'Bilal Khan', father: 'Tariq Mehmood', class: 'Class 10', section: 'C', status: 'present', whatsapp: '923014455667' },
   ]);
 
   const [logs, setLogs] = useState([
@@ -52,6 +64,38 @@ export default function App() {
 
   const toggleStatus = (id: string, newStatus: string) => {
     setStudents(students.map(s => s.id === id ? { ...s, status: newStatus } : s));
+  };
+
+  const handleAddStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStudent.name || !newStudent.roll || !newStudent.whatsapp) {
+      alert('Roll number, Student Name aur WhatsApp number zaroori hain!');
+      return;
+    }
+
+    const createdStudent = {
+      id: String(Date.now()),
+      roll: newStudent.roll,
+      name: newStudent.name,
+      father: newStudent.father || 'N/A',
+      class: newStudent.class,
+      section: newStudent.section,
+      status: 'present',
+      whatsapp: newStudent.whatsapp.startsWith('92') ? newStudent.whatsapp : `92${newStudent.whatsapp.replace(/^0+/, '')}`
+    };
+
+    setStudents([createdStudent, ...students]);
+    setStudentAddedSuccess(true);
+    setNewStudent({
+      roll: '',
+      name: '',
+      father: '',
+      class: newStudent.class,
+      section: newStudent.section,
+      whatsapp: ''
+    });
+
+    setTimeout(() => setStudentAddedSuccess(false), 3000);
   };
 
   const submitAttendance = () => {
@@ -73,7 +117,7 @@ export default function App() {
 
       setLogs(prev => [...newLogs, ...prev]);
       setIsSubmitting(false);
-      setNotificationStatus(`Attendance submitted! ${absents.length} Absent alert(s) sent via WhatsApp Cloud API.`);
+      setNotificationStatus(`Attendance saved! ${absents.length} Absent alert(s) sent via WhatsApp Cloud API.`);
     }, 1200);
   };
 
@@ -128,6 +172,19 @@ export default function App() {
             <CalendarCheck className="w-4 h-4" />
             Smart Attendance
           </button>
+
+          <button
+            onClick={() => setActiveTab('add_student')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition ${
+              activeTab === 'add_student'
+                ? 'bg-emerald-700 text-white shadow-sm'
+                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
+            }`}
+          >
+            <UserPlus className="w-4 h-4 text-amber-500" />
+            Add Student Data
+          </button>
+
           <button
             onClick={() => setActiveTab('alerts')}
             className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition ${
@@ -144,6 +201,7 @@ export default function App() {
               </span>
             )}
           </button>
+
           <button
             onClick={() => setActiveTab('students')}
             className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition ${
@@ -155,6 +213,7 @@ export default function App() {
             <Users className="w-4 h-4" />
             Student Directory
           </button>
+
           <button
             onClick={() => setActiveTab('sef')}
             className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition ${
@@ -168,13 +227,122 @@ export default function App() {
           </button>
         </div>
 
-        {/* Tab 1: Attendance */}
+        {/* Tab: Add Student Data */}
+        {activeTab === 'add_student' && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 max-w-2xl mx-auto w-full">
+            <div className="border-b border-slate-100 pb-4 mb-4">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-emerald-700" />
+                Add New Student (Class Teacher Portal)
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                Teacher apni class aur section ke bachy ka data yahan register karein taaki attendance aur WhatsApp alerts activate ho sakein.
+              </p>
+            </div>
+
+            {studentAddedSuccess && (
+              <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                <span>Student kamyabi se add ho gaya hai! Directory aur Attendance list mein shamil kar diya gaya hai.</span>
+              </div>
+            )}
+
+            <form onSubmit={handleAddStudent} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Class</label>
+                  <select
+                    value={newStudent.class}
+                    onChange={(e) => setNewStudent({ ...newStudent, class: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-medium"
+                  >
+                    {classesList.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Section (A to F)</label>
+                  <select
+                    value={newStudent.section}
+                    onChange={(e) => setNewStudent({ ...newStudent, section: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none bg-white font-bold text-emerald-800"
+                  >
+                    {sectionsList.map(sec => (
+                      <option key={sec} value={sec}>Section {sec}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Roll Number</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 01, 15, 23"
+                    value={newStudent.roll}
+                    onChange={(e) => setNewStudent({ ...newStudent, roll: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Parent Mobile / WhatsApp</label>
+                  <input
+                    type="tel"
+                    placeholder="e.g. 03033639664"
+                    value={newStudent.whatsapp}
+                    onChange={(e) => setNewStudent({ ...newStudent, whatsapp: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none font-mono"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Full Name</label>
+                <input
+                  type="text"
+                  placeholder="Student ka pura naam"
+                  value={newStudent.name}
+                  onChange={(e) => setNewStudent({ ...newStudent, name: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Father Name</label>
+                <input
+                  type="text"
+                  placeholder="Walid ka naam"
+                  value={newStudent.father}
+                  onChange={(e) => setNewStudent({ ...newStudent, father: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2 mt-4"
+              >
+                <Save className="w-4 h-4" />
+                Register Student
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* Tab: Attendance */}
         {activeTab === 'attendance' && (
           <div className="flex flex-col gap-6">
-            {/* Quick Stats Bar for Selected Class/Section */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                <span className="text-xs text-slate-500 font-medium">Class Strength ({selectedClass} - {selectedSection})</span>
+                <span className="text-xs text-slate-500 font-medium">Strength ({selectedClass} - {selectedSection})</span>
                 <p className="text-2xl font-bold text-slate-800 mt-1">{filteredStudents.length}</p>
               </div>
               <div className="bg-white p-4 rounded-xl border border-emerald-200 shadow-sm">
@@ -191,11 +359,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* Attendance Filter & Form */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 pb-4 mb-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Class Selection */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Class</label>
                     <select
@@ -209,9 +375,8 @@ export default function App() {
                     </select>
                   </div>
 
-                  {/* Section Selection */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Section</label>
+                    <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Section (A to F)</label>
                     <select
                       value={selectedSection}
                       onChange={(e) => setSelectedSection(e.target.value)}
@@ -223,7 +388,6 @@ export default function App() {
                     </select>
                   </div>
 
-                  {/* Date Picker */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Date</label>
                     <input
@@ -261,11 +425,16 @@ export default function App() {
                 </div>
               )}
 
-              {/* Attendance Table */}
               {filteredStudents.length === 0 ? (
                 <div className="text-center py-10 text-slate-400">
                   <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Is class aur section mein abhi koi student registered nahi hai.</p>
+                  <button 
+                    onClick={() => setActiveTab('add_student')}
+                    className="mt-3 text-xs font-semibold text-emerald-700 hover:underline"
+                  >
+                    + Naya Student Register Karein
+                  </button>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
@@ -336,7 +505,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: WhatsApp & SMS Logs */}
+        {/* Tab: WhatsApp & SMS Logs */}
         {activeTab === 'alerts' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
             <div>
@@ -387,13 +556,23 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 3: Student Directory */}
+        {/* Tab: Student Directory */}
         {activeTab === 'students' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-              <h2 className="text-base font-bold text-slate-800">
-                Enrolled Students ({students.length} Total Enrolled)
-              </h2>
+              <div>
+                <h2 className="text-base font-bold text-slate-800">
+                  Enrolled Students Directory ({students.length} Total Enrolled)
+                </h2>
+                <p className="text-xs text-slate-500">Tamam registered students ka record.</p>
+              </div>
+              <button
+                onClick={() => setActiveTab('add_student')}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-semibold px-3.5 py-2 rounded-lg flex items-center gap-1.5 transition"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                + Add New Student
+              </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {students.map(s => (
@@ -417,7 +596,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 4: SEF Entitlements */}
+        {/* Tab: SEF Entitlements */}
         {activeTab === 'sef' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
             <div>
