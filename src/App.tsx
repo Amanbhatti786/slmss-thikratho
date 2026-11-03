@@ -1,29 +1,25 @@
 import React, { useState } from 'react';
 import { 
   Users, CalendarCheck, Award, 
-  Send, BookOpen, ShieldCheck, 
+  Send, ShieldCheck, 
   CheckCircle2, Clock, Check, RefreshCw, UserPlus, Save,
-  Smartphone, Radio, MessageSquareText
+  Smartphone, Radio, ExternalLink
 } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'attendance' | 'students' | 'add_student' | 'alerts' | 'sef'>('attendance');
-  const [selectedClass, setSelectedClass] = useState('Class 1');
+  const [selectedClass, setSelectedClass] = useState('Class 7');
   const [selectedSection, setSelectedSection] = useState('A');
   const [attendanceDate, setAttendanceDate] = useState('2026-11-03');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
   const [studentAddedSuccess, setStudentAddedSuccess] = useState(false);
 
-  // Traccar Local Gateway Configuration
-  const GATEWAY_ENDPOINT = "http://10.147.183.143:8082";
-  const GATEWAY_LOCAL_TOKEN = "00f956f7-9a75-4f1e-93b2-6bbb636d1cfe";
-
   const [newStudent, setNewStudent] = useState({
     roll: '',
     name: '',
     father: '',
-    class: 'Class 1',
+    class: 'Class 7',
     section: 'A',
     mobile: ''
   });
@@ -36,26 +32,22 @@ export default function App() {
   const sectionsList = ['A', 'B', 'C', 'D', 'E', 'F'];
 
   const [students, setStudents] = useState([
-    { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 1', section: 'A', status: 'present', mobile: '03001234567' },
-    { id: '2', roll: '02', name: 'Kashif Hussain', father: 'Muneer Ahmed', class: 'Class 1', section: 'A', status: 'present', mobile: '03019876543' },
+    { id: '1', roll: '01', name: 'Zohaib Ali', father: 'Muhammad Murad', class: 'Class 7', section: 'A', status: 'present', mobile: '03003077396' },
+    { id: '2', roll: '02', name: 'Taj Muhammad', father: 'Ali Bux', class: 'Class 7', section: 'A', status: 'absent', mobile: '03003077396' },
     { id: '3', roll: '03', name: 'Dua Fatima', father: 'Ghulam Rasool', class: 'Class 1', section: 'A', status: 'absent', mobile: '03033639664' },
-    { id: '4', roll: '04', name: 'Taj Muhammad', father: 'Ali Bux', class: 'Class 1', section: 'A', status: 'absent', mobile: '03003456789' },
-    { id: '5', roll: '01', name: 'Abdul Rehman', father: 'Nazir Ahmed', class: 'Class 1', section: 'B', status: 'present', mobile: '03024567891' },
-    { id: '6', roll: '02', name: 'Mehwish', father: 'Ali Nawaz', class: 'Class 1', section: 'B', status: 'leave', mobile: '03051239874' },
-    { id: '7', roll: '01', name: 'Ali Raza', father: 'Shahid Ali', class: 'Katchi', section: 'A', status: 'present', mobile: '03009988771' },
+    { id: '4', roll: '01', name: 'Abdul Rehman', father: 'Nazir Ahmed', class: 'Class 1', section: 'B', status: 'present', mobile: '03024567891' },
   ]);
 
   const [logs, setLogs] = useState([
     { 
       id: '1', 
       name: 'Taj Muhammad', 
-      roll: '04', 
-      classSection: 'Class 1-A', 
-      channel: 'SIM SMS Gateway', 
-      mobile: '03003456789', 
-      msgText: 'Muhtaram Walid, aapka bacha Taj Muhammad (Roll 04) aaj school se ghair-hazir hai. Shah Latif School Thikratho.',
-      status: 'Delivered', 
-      time: '12:08 AM' 
+      roll: '02', 
+      classSection: 'Class 7-A', 
+      mobile: '03003077396', 
+      msgText: 'Muhtaram Walid, aapka bacha Taj Muhammad (Roll 02) aaj school se ghair-hazir hai. Shah Latif School Thikratho.',
+      status: 'Ready to Send', 
+      time: '01:47 PM' 
     }
   ]);
 
@@ -99,40 +91,22 @@ export default function App() {
     setTimeout(() => setStudentAddedSuccess(false), 3000);
   };
 
-  const triggerDirectSMS = (student: any) => {
-    const text = encodeURIComponent(
-      `Muhtaram Walid, aapka bacha ${student.name} (Roll ${student.roll}) aaj school se ghair-hazir hai. Shah Latif Model Secondary School Thikratho.`
-    );
-    window.open(`sms:${student.mobile}?body=${text}`, '_blank');
+  // Direct Mobile SMS Dispatch (Opens native SMS with filled body)
+  const sendSMSNative = (student: any) => {
+    const message = `Muhtaram Walid, aapka bacha ${student.name} (Roll ${student.roll}) aaj school se ghair-hazir hai. Shah Latif Model Secondary School Thikratho.`;
+    const cleanMobile = student.mobile.replace(/\s+/g, '');
+    window.location.href = `sms:${cleanMobile}?body=${encodeURIComponent(message)}`;
   };
 
-  // Direct Traccar Local Gateway Dispatcher
-  const submitAttendance = async () => {
+  // Submit and Trigger SMS
+  const submitAttendance = () => {
     setIsSubmitting(true);
-    setNotificationStatus("Gateway ke zariye SIM SMS dispatch ho rahe hain...");
-
     const absents = filteredStudents.filter(s => s.status === 'absent');
 
-    for (const s of absents) {
-      const messageContent = `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`;
-      
-      try {
-        // Direct Call to Traccar Local HTTP Service
-        await fetch(GATEWAY_ENDPOINT, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Authorization': GATEWAY_LOCAL_TOKEN,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            to: s.mobile,
-            message: messageContent
-          })
-        }).catch(() => null);
-      } catch (e) {
-        console.error(e);
-      }
+    if (absents.length === 0) {
+      setNotificationStatus(`Attendance save ho gayi! Koi bacha absent nahi hai.`);
+      setIsSubmitting(false);
+      return;
     }
 
     const newLogs = absents.map((s, idx) => ({
@@ -140,16 +114,20 @@ export default function App() {
       name: s.name,
       roll: s.roll,
       classSection: `${s.class}-${s.section}`,
-      channel: 'SIM SMS Gateway',
       mobile: s.mobile,
       msgText: `Muhtaram Walid, aapka bacha ${s.name} (Roll ${s.roll}) aaj school se ghair-hazir hai. Shah Latif School Thikratho.`,
-      status: 'Sent to SIM',
+      status: 'Dispatched',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }));
 
     setLogs(prev => [...newLogs, ...prev]);
     setIsSubmitting(false);
-    setNotificationStatus(`Attendance save ho gayi! ${absents.length} Absent student(s) ko SIM SMS trigger bhej diya gaya hai.`);
+    setNotificationStatus(`Attendance save ho gayi! ${absents.length} Absent student(s) ke SMS ready hain.`);
+
+    // Agar 1 bacha absent hai to foran SMS screen khol de
+    if (absents.length === 1) {
+      sendSMSNative(absents[0]);
+    }
   };
 
   const presentCount = filteredStudents.filter(s => s.status === 'present').length;
@@ -180,7 +158,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <span className="text-xs bg-emerald-900/60 px-3 py-1.5 rounded-full border border-emerald-600/50 flex items-center gap-1.5">
               <Radio className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
-              SIM Local Gateway Active
+              SIM SMS Ready
             </span>
           </div>
         </div>
@@ -239,18 +217,6 @@ export default function App() {
           >
             <Users className="w-4 h-4" />
             Student Directory
-          </button>
-
-          <button
-            onClick={() => setActiveTab('sef')}
-            className={`px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition ${
-              activeTab === 'sef'
-                ? 'bg-emerald-700 text-white shadow-sm'
-                : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <Award className="w-4 h-4" />
-            SEF Free Entitlements
           </button>
         </div>
 
@@ -320,17 +286,8 @@ export default function App() {
                   disabled={isSubmitting || filteredStudents.length === 0}
                   className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 self-stretch md:self-auto justify-center disabled:opacity-50"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Sending via Gateway...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      Submit & Auto-Send SIM SMS
-                    </>
-                  )}
+                  <Send className="w-4 h-4" />
+                  Submit & Send SIM SMS
                 </button>
               </div>
 
@@ -341,111 +298,94 @@ export default function App() {
                 </div>
               )}
 
-              {filteredStudents.length === 0 ? (
-                <div className="text-center py-10 text-slate-400">
-                  <Users className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Is class aur section mein abhi koi student registered nahi hai.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
-                      <tr>
-                        <th className="py-3 px-3">Roll #</th>
-                        <th className="py-3 px-3">Student Name</th>
-                        <th className="py-3 px-3">Father Name</th>
-                        <th className="py-3 px-3">Parent SIM Mobile #</th>
-                        <th className="py-3 px-3 text-center">Mark Status</th>
-                        <th className="py-3 px-3 text-center">Direct Action</th>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
+                    <tr>
+                      <th className="py-3 px-3">Roll #</th>
+                      <th className="py-3 px-3">Student Name</th>
+                      <th className="py-3 px-3">Parent SIM #</th>
+                      <th className="py-3 px-3 text-center">Attendance</th>
+                      <th className="py-3 px-3 text-center">Direct Send</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredStudents.map((student) => (
+                      <tr key={student.id} className="hover:bg-slate-50 transition">
+                        <td className="py-3 px-3 font-semibold text-slate-700">{student.roll}</td>
+                        <td className="py-3 px-3 font-medium text-slate-900">{student.name}</td>
+                        <td className="py-3 px-3 text-slate-700 font-mono text-xs font-semibold">{student.mobile}</td>
+                        <td className="py-3 px-3">
+                          <div className="flex justify-center gap-1.5">
+                            <button
+                              onClick={() => toggleStatus(student.id, 'present')}
+                              className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                                student.status === 'present'
+                                  ? 'bg-emerald-600 text-white shadow-sm'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              Present
+                            </button>
+                            <button
+                              onClick={() => toggleStatus(student.id, 'absent')}
+                              className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                                student.status === 'absent'
+                                  ? 'bg-rose-600 text-white shadow-sm'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              Absent
+                            </button>
+                            <button
+                              onClick={() => toggleStatus(student.id, 'leave')}
+                              className={`px-3 py-1 rounded text-xs font-semibold transition ${
+                                student.status === 'leave'
+                                  ? 'bg-amber-500 text-white shadow-sm'
+                                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                              }`}
+                            >
+                              Leave
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 text-center">
+                          {student.status === 'absent' ? (
+                            <button
+                              onClick={() => sendSMSNative(student)}
+                              className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-md shadow transition"
+                            >
+                              <Smartphone className="w-3.5 h-3.5" />
+                              Send SMS
+                            </button>
+                          ) : (
+                            <span className="text-slate-300 text-xs">-</span>
+                          )}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {filteredStudents.map((student) => (
-                        <tr key={student.id} className="hover:bg-slate-50 transition">
-                          <td className="py-3 px-3 font-semibold text-slate-700">{student.roll}</td>
-                          <td className="py-3 px-3 font-medium text-slate-900">{student.name}</td>
-                          <td className="py-3 px-3 text-slate-600">{student.father}</td>
-                          <td className="py-3 px-3 text-slate-700 font-mono text-xs font-semibold">{student.mobile}</td>
-                          <td className="py-3 px-3">
-                            <div className="flex justify-center gap-1.5">
-                              <button
-                                onClick={() => toggleStatus(student.id, 'present')}
-                                className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                                  student.status === 'present'
-                                    ? 'bg-emerald-600 text-white shadow-sm'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                              >
-                                Present
-                              </button>
-                              <button
-                                onClick={() => toggleStatus(student.id, 'absent')}
-                                className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                                  student.status === 'absent'
-                                    ? 'bg-rose-600 text-white shadow-sm'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                              >
-                                Absent
-                              </button>
-                              <button
-                                onClick={() => toggleStatus(student.id, 'leave')}
-                                className={`px-3 py-1 rounded text-xs font-semibold transition ${
-                                  student.status === 'leave'
-                                    ? 'bg-amber-500 text-white shadow-sm'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                }`}
-                              >
-                                Leave
-                              </button>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-center">
-                            {student.status === 'absent' ? (
-                              <button
-                                onClick={() => triggerDirectSMS(student)}
-                                className="inline-flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold px-2.5 py-1 rounded shadow-sm transition"
-                              >
-                                <MessageSquareText className="w-3.5 h-3.5" />
-                                1-Click SMS
-                              </button>
-                            ) : (
-                              <span className="text-slate-400 text-xs">-</span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
 
         {activeTab === 'alerts' && (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-              <div>
-                <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-emerald-700" />
-                  Parent Attendance SIM SMS Dispatch Logs
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Local HTTP Gateway: {GATEWAY_ENDPOINT}
-                </p>
-              </div>
-            </div>
-
+            <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-emerald-700" />
+              Parent Attendance SIM SMS Dispatch Logs
+            </h2>
             <div className="overflow-x-auto mt-2">
               <table className="w-full text-left text-sm">
                 <thead className="bg-slate-50 text-slate-600 uppercase text-xs border-b border-slate-200">
                   <tr>
                     <th className="py-3 px-3">Time</th>
                     <th className="py-3 px-3">Student Name</th>
-                    <th className="py-3 px-3">Class & Section</th>
+                    <th className="py-3 px-3">Class</th>
                     <th className="py-3 px-3">Parent SIM #</th>
-                    <th className="py-3 px-3">Delivery Status</th>
+                    <th className="py-3 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -455,9 +395,9 @@ export default function App() {
                         <Clock className="w-3.5 h-3.5" />
                         {log.time}
                       </td>
-                      <td className="py-3 px-3 font-medium text-slate-800">{log.name} (Roll #{log.roll})</td>
+                      <td className="py-3 px-3 font-medium text-slate-800">{log.name}</td>
                       <td className="py-3 px-3 font-semibold text-xs text-emerald-800">{log.classSection}</td>
-                      <td className="py-3 px-3 font-mono text-xs text-slate-700 font-semibold">{log.mobile}</td>
+                      <td className="py-3 px-3 font-mono text-xs text-slate-700">{log.mobile}</td>
                       <td className="py-3 px-3">
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
                           <Check className="w-3 h-3" />
@@ -478,13 +418,11 @@ export default function App() {
               <UserPlus className="w-5 h-5 text-emerald-700" />
               Add New Student
             </h2>
-
             {studentAddedSuccess && (
               <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-sm">
                 Student kamyabi se add ho gaya hai!
               </div>
             )}
-
             <form onSubmit={handleAddStudent} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -499,7 +437,6 @@ export default function App() {
                     ))}
                   </select>
                 </div>
-
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Section</label>
                   <select
@@ -513,7 +450,6 @@ export default function App() {
                   </select>
                 </div>
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Roll Number</label>
@@ -525,7 +461,6 @@ export default function App() {
                     required
                   />
                 </div>
-
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Parent SIM Mobile Number</label>
                   <input
@@ -537,7 +472,6 @@ export default function App() {
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Student Full Name</label>
                 <input
@@ -548,18 +482,6 @@ export default function App() {
                   required
                 />
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Father Name</label>
-                <input
-                  type="text"
-                  value={newStudent.father}
-                  onChange={(e) => setNewStudent({ ...newStudent, father: e.target.value })}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-                  required
-                />
-              </div>
-
               <button
                 type="submit"
                 className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold py-2.5 rounded-lg shadow transition flex items-center justify-center gap-2 mt-4"
@@ -587,13 +509,6 @@ export default function App() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {activeTab === 'sef' && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex flex-col gap-4">
-            <h2 className="text-base font-bold text-slate-800">SEF FAS Free Entitlements</h2>
-            <p className="text-xs text-slate-500">Shah Latif Model Secondary School Thikratho (Code: 340102001)</p>
           </div>
         )}
       </div>
